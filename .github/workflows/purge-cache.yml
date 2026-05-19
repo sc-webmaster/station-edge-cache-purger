@@ -1,0 +1,48 @@
+name: Purge Bluehost Edge Cache
+
+on:
+  schedule:
+    # 1 AM Pacific Standard Time
+    - cron: '0 8 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Purge Edge Cache Across All Sites
+
+        run: |
+
+          DOMAINS=(
+            "https://stationcasinos.com"
+            "https://boulderstation.com"
+            "https://durangoresort.com"
+            "https://greenvalleyranch.com"
+            "https://palacestation.com"
+            "https://redrockresort.com"
+            "https://santafestation.com"
+            "https://sunsetstation.com"
+            "https://wildfiregaming.com"
+          )
+
+          for DOMAIN in "${DOMAINS[@]}"
+          do
+            echo ""
+            echo "======================================="
+            echo "Purging Edge Cache: $DOMAIN"
+            echo "======================================="
+
+            RESPONSE=$(curl -s \
+              -X POST \
+              -d "purge_edge_cache=1" \
+              -d "key=${{ secrets.PURGE_KEY }}" \
+              "$DOMAIN/")
+
+            echo "$RESPONSE"
+
+            echo ""
+            echo ""
+          done
