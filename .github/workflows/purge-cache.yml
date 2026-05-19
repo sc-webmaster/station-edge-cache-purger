@@ -13,8 +13,12 @@ jobs:
 
     steps:
       - name: Purge Edge Cache Across All Sites
-
         run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d_%H-%M-%S_UTC")
+          LOGFILE="purge-log_${TIMESTAMP}.txt"
+          FAILED=0
+          TOTAL=0
+          PASSED=0
 
           DOMAINS=(
             "https://stationcasinos.com"
@@ -28,21 +32,78 @@ jobs:
             "https://wildfiregaming.com"
           )
 
+          echo "Edge Cache Purge Log — $TIMESTAMP" | tee "$LOGFILE"
+          echo "==========================================" | tee -a "$LOGFILE"
+          echo "" | tee -a "$LOGFILE"
+
+          # Start the summary table for GitHub Actions UI
+          echo "## 🔄 Edge Cache Purge Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Run:** $TIMESTAMP" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Domain | Success | Result | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|---------|--------|--------|" >> "$GITHUB_STEP_SUMMARY"
+
           for DOMAIN in "${DOMAINS[@]}"
           do
-            echo ""
-            echo "======================================="
-            echo "Purging Edge Cache: $DOMAIN"
-            echo "======================================="
+            TOTAL=$((TOTAL + 1))
 
-            RESPONSE=$(curl -s \
+            echo "---------------------------------------" | tee -a "$LOGFILE"
+            echo "Purging: $DOMAIN" | tee -a "$LOGFILE"
+            echo "Time:    $(date -u +"%H:%M:%S UTC")" | tee -a "$LOGFILE"
+
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
               -X POST \
               -d "purge_edge_cache=1" \
               -d "key=${{ secrets.PURGE_KEY }}" \
               "$DOMAIN/")
 
-            echo "$RESPONSE"
+            HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
 
-            echo ""
-            echo ""
+            echo "HTTP:    $HTTP_CODE" | tee -a "$LOGFILE"
+            echo "Response: $BODY" | tee -a "$LOGFILE"
+
+            # Parse JSON response
+            SUCCESS=$(echo "$BODY" | jq -r '.success // empty' 2>/dev/null)
+            RESULT=$(echo "$BODY" | jq -r '.result // empty' 2>/dev/null)
+
+            if [ "$SUCCESS" = "true" ] && [ "$RESULT" = "true" ]; then
+              STATUS="✅ PASS"
+              PASSED=$((PASSED + 1))
+            else
+              STATUS="❌ FAIL"
+              FAILED=$((FAILED + 1))
+            fi
+
+            echo "Status:  $STATUS" | tee -a "$LOGFILE"
+            echo "" | tee -a "$LOGFILE"
+
+            # Append row to summary table
+            DOMAIN_SHORT=$(echo "$DOMAIN" | sed 's|https://||')
+            echo "| $DOMAIN_SHORT | $SUCCESS | $RESULT | $STATUS |" >> "$GITHUB_STEP_SUMMARY"
           done
+
+          echo "==========================================" | tee -a "$LOGFILE"
+          echo "TOTAL: $TOTAL  |  PASSED: $PASSED  |  FAILED: $FAILED" | tee -a "$LOGFILE"
+          echo "==========================================" | tee -a "$LOGFILE"
+
+          # Summary footer
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Total:** $TOTAL &nbsp;|&nbsp; **Passed:** $PASSED &nbsp;|&nbsp; **Failed:** $FAILED" >> "$GITHUB_STEP_SUMMARY"
+
+          # Save log path for the upload step
+          echo "LOGFILE=$LOGFILE" >> "$GITHUB_ENV"
+
+          # Fail the job if any domain failed
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED domain(s) failed to purge."
+            exit 1
+          fi
+
+      - name: Upload Purge Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: purge-log
+          path: ${{ env.LOGFILE }}
+          retention-days: 90
