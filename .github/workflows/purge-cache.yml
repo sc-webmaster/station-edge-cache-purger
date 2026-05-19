@@ -7,15 +7,23 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   purge:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Purge Edge Cache Across All Sites
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%d_%H-%M-%S_UTC")
-          LOGFILE="purge-log_${TIMESTAMP}.txt"
+          DATE_FOLDER=$(date -u +"%Y-%m")
+          mkdir -p "logs/${DATE_FOLDER}"
+          LOGFILE="logs/${DATE_FOLDER}/purge-log_${TIMESTAMP}.txt"
           FAILED=0
           TOTAL=0
           PASSED=0
@@ -99,6 +107,15 @@ jobs:
             echo "::error::$FAILED domain(s) failed to purge."
             exit 1
           fi
+
+      - name: Commit Log to Repository
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/
+          git commit -m "📋 Purge log — $(date -u +"%Y-%m-%d %H:%M UTC")" || echo "No changes to commit"
+          git push
 
       - name: Upload Purge Log
         if: always()
