@@ -1,0 +1,70 @@
+Edge Cache Purge Log — 2026-06-13_10-24-59_UTC
+==========================================
+
+---------------------------------------
+Purging: https://stationcasinos.com
+Time:    10:24:59 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://boulderstation.com
+Time:    10:25:01 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://durangoresort.com
+Time:    10:25:06 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://greenvalleyranch.com
+Time:    10:25:15 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://palacestation.com
+Time:    10:25:25 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://redrockresort.com
+Time:    10:25:26 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://santafestation.com
+Time:    10:25:41 UTC
+HTTP:    200
+Response: 
+{"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://sunsetstation.com
+Time:    10:25:45 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+---------------------------------------
+Purging: https://wildfiregaming.com
+Time:    10:25:50 UTC
+HTTP:    200
+Response: {"success":true,"result":true}
+Status:  ✅ PASS
+
+==========================================
+TOTAL: 9  |  PASSED: 9  |  FAILED: 0
+==========================================
